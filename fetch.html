@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta  charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Users Fetch</title>
+    <style>
+        .user-card{
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px;
+            width: 200px;
+            display: inline-block;
+            vertical-align: top;
+            text-align: center;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            &:hover {
+                transform: scale(1.05);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="userContainer"></div>
+
+    <script>
+        const fetchUsers = () => {
+            fetch('test.json')
+            .then(response => response.json())
+            .then(data => {
+                // Access the users array
+                const users = data.users;
+
+                // Clear previous content
+                const container = document.getElementById('userContainer');
+                container.innerHTML = '';
+
+                // Loop through and create user cards
+                users.forEach(user => {
+                    const userCard = document.createElement('div');
+                    userCard.className = 'user-card';
+                    userCard.innerHTML = `
+                        <h2>Name: ${user.name}</h2>
+                        <p>Code: ${user.passcode}</p>
+                        <img src="${user.profile}" alt="${user.name}'s profile" style="max-width: 200px;">
+                    `;
+                    container.appendChild(userCard);
+                });
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+            });
+        }
+        fetchUsers();
+    </script>
+</body>
+</html>

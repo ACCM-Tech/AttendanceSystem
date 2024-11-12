@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Time Tracking</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --background-color: #ecf0f1;
+            --text-color: #333;
+            --accent-color: #27ae60;
+        }
+    
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+        }
+    
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+    
+        .container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+    
+        .header p {
+            font-weight: 300;
+            font-size: 1.2rem;
+            color: white;
+            background: linear-gradient(to right, #2c3e50, #3498db);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+    
+        .liveCaptureBox {
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+            margin: 0 auto 20px;
+            border: 4px solid var(--secondary-color);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+    
+        .liveCaptureBox:hover {
+            transform: scale(1.02);
+        }
+    
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 16px;
+        }
+    
+        .currentTime {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+    
+        .buttonSection {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+    
+        .buttonSection button {
+            flex: 1;
+            max-width: 200px;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+    
+        .buttonSection button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(0,0,0,0.15);
+            background: var(--accent-color);
+        }
+    
+        .passcodeModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+    
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 350px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+    
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.7);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+    
+        .close:hover {
+            color: red;
+        }
+    
+        .modal-content .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+    
+        .modal-content .numpad button {
+            background: #f1f1f1;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+    
+        .modal-content .numpad button:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+    
+        #passcodePreview {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            letter-spacing: 15px;
+            font-size: 30px;
+            color: var(--primary-color);
+        }
+    
+        #passcodePreview span {
+            width: 30px;
+            text-align: center;
+        }
+    
+        .countdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 150px;
+            color: var(--accent-color);
+            z-index: 2000;
+            display: none;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+    
+        #errorMsg {
+            color: red;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+    
+        /* Responsive Adjustments */
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+    
+            .buttonSection {
+                flex-direction: column;
+                gap: 10px;
+            }
+    
+            .buttonSection button {
+                width: 100%;
+                max-width: none;
+            }
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="countdown" id="countdown"></div>
+
+    <div class="container">
+        <div class="header">
+            <p>MAKE SURE TO PLACE YOUR HEAD WITHIN THE BOX</p>
+        </div>
+
+        <div class="liveCaptureBox">
+            <video id="videoElement" autoplay></video>
+        </div>
+
+        <div class="currentTime">
+            <p id="currentTime"></p>
+            <script>
+                let currentTimeDisplay = document.getElementById('currentTime');
+                let currentTime = new Date();
+                setInterval(() => {
+            currentTime.setSeconds(currentTime.getSeconds() + 1);
+                    currentTimeDisplay.textContent = currentTime.toLocaleTimeString();
+                },1000);
+                
+
+            </script>
+        </div>
+
+        
+    </div>
+
+
+    <div class="passcodeModal" id="passcodeModal">
+        <div class="modal-content">
+            <span class="close" onclick="closePasscodeModal()">&times;</span>
+            <h2>Enter Passcode</h2>
+            <div id="passcodePreview"></div>
+            <div class="numpad" id="numpadContainer">
+                <!-- Numpad buttons will be dynamically added here -->
+            </div>
+            <button onclick="validatePasscode()">Submit</button>
+            <p id="errorMsg"></p>
+            
+        </div>
+    </div>
+
+    <div class="buttonSection">
+        <button onclick="showPasscodeModal('timeIn')">TIME IN</button>
+        <button onclick="showPasscodeModal('registerEmployee')">REGISTER FACE/EMPLOYEE</button>
+        <button onclick="showPasscodeModal('timeOut')">TIME OUT</button>
+    </div>
+
+    <script>
+        let currentAction = '';
+        let enteredPasscode = '';
+        const passcodePreview = document.getElementById('passcodePreview');
+        const videoElement = document.getElementById('videoElement');
+        const countdownElement = document.getElementById('countdown');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+                videoElement.srcObject = stream;
+            })
+            .catch(function(err) {
+                console.log("Error accessing webcam: " + err);
+            });
+
+        function createNumpad() {
+            const numpadContainer = document.getElementById('numpadContainer');
+            
+            // Add buttons 1-9
+            for (let i = 1; i <= 9; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.onclick = () => addToPasscode(i);
+                numpadContainer.appendChild(button);
+            }
+            
+            // Add 0 button
+            const zeroButton = document.createElement('button');
+            zeroButton.textContent = '0';
+            zeroButton.onclick = () => addToPasscode(0);
+            numpadContainer.appendChild(zeroButton);
+
+            // Add backspace button
+            const backspaceButton = document.createElement('button');
+            backspaceButton.textContent = '⌫';
+            backspaceButton.onclick = removeLastDigit;
+            numpadContainer.appendChild(backspaceButton);
+        }
+
+        function showPasscodeModal(action) {
+            currentAction = action;
+            enteredPasscode = '';
+            document.getElementById('passcodeModal').style.display = 'flex';
+            document.getElementById('errorMsg').textContent = '';
+            updatePasscodePreview();
+        }
+
+        function closePasscodeModal() {
+            document.getElementById('passcodeModal').style.display = 'none';
+        }
+
+        function addToPasscode(digit) {
+            if (enteredPasscode.length < 4) {
+                enteredPasscode += digit;
+                updatePasscodePreview();
+            }
+        }
+
+        function removeLastDigit() {
+            enteredPasscode = enteredPasscode.slice(0, -1);
+            updatePasscodePreview();
+        }
+
+        function updatePasscodePreview() {
+            passcodePreview.innerHTML = enteredPasscode
+                .split('')
+                .map(() => '<span>•</span>')
+                .join('');
+        }
+
+        function startCountdown() {
+            countdownElement.style.display = 'block';
+            let count = 2;
+            
+            const countdownInterval = setInterval(() => {
+                countdownElement.textContent = count;
+                count--;
+
+                if (count < 0) {
+                    clearInterval(countdownInterval);
+                    countdownElement.style.display = 'none';
+                    captureAndSendImage();
+                }
+            }, 1000);
+        }
+
+        function captureAndSendImage() {
+            // Create canvas to capture image from video
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+            const capturedPicture = canvas.toDataURL('image/png');
+
+            const formData = new URLSearchParams();
+            formData.append('passcode', enteredPasscode);
+            formData.append('action', currentAction);
+            formData.append('capturedPicture', capturedPicture);
+
+            fetch('check_passcode.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.valid) {
+                    alert(data.message);
+                    alert('Successfully ' + currentAction);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    alert(data.error || 'Operation failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An unexpected error occurred');
+            });
+        }
+
+        function validatePasscode() {
+            if (enteredPasscode.length !== 4) {
+                document.getElementById('errorMsg').textContent = 'Please enter a 4-digit passcode';
+                return;
+            }
+
+            startCountdown();
+        }
+
+        createNumpad();
+
+        function captureAndSendImage() {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            const capturedPicture = canvas.toDataURL('image/png');
+            const payload = {
+                passcode: enteredPasscode,
+                action: currentAction,
+                capturedPicture: capturedPicture
+            };
+            fetch('check_passcode.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.valid) {
+                    alert(data.message);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    alert(data.error || 'Operation failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An unexpected error occurred');
+            });
+        }
+        
+    </script>
+</body>
+</html>
